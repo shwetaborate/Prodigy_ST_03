@@ -1,10 +1,13 @@
 package com.saucedemo.runner;
 
-public class TestRunner {
+import io.cucumber.testng.AbstractTestNGCucumberTests;
+import io.cucumber.testng.CucumberOptions;
 
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
-	}
-
+@CucumberOptions(
+        features = "src/test/resources/features",
+        glue = "com.saucedemo.stepdefinitions",
+        plugin = {"pretty", "html:target/cucumber-reports.html"},
+        tags = "@positive or @negative or @edge"
+)
+public class TestRunner extends AbstractTestNGCucumberTests {
 }
