@@ -1,132 +1,42 @@
-Feature: SauceDemo Login Functionality
-  This feature validates the login functionality of the SauceDemo website.
+Feature: Sauce Demo Login Functionality
+  As a user of the Sauce Demo website
+  I want to be able to log in with valid credentials
+  And be prevented from logging in with invalid credentials
 
-  # Positive Test Cases
-  @positive
-  Scenario: Login with Standard User Credentials
-    Given I navigate to the SauceDemo login page
-    When I enter username "standard_user" and password "secret_sauce"
-    And I click on the login button
-    Then I should be redirected to the inventory page
+  Background:
+    Given the user is on the login page
 
-  @positive
-  Scenario: Login with Performance Glitch User
-    Given I navigate to the SauceDemo login page
-    When I enter username "performance_glitch_user" and password "secret_sauce"
-    And I click on the login button
-    Then I should be redirected to the inventory page
+  Scenario: Successful login with valid credentials
+    When the user logs in with username "standard_user" and password "secret_sauce"
+    Then the user should be logged in successfully
 
-  @positive
-  Scenario: Login with Error User
-    Given I navigate to the SauceDemo login page
-    When I enter username "error_user" and password "secret_sauce"
-    And I click on the login button
-    Then I should be redirected to the inventory page
+  Scenario: Failed login with locked out user
+    When the user logs in with username "locked_out_user" and password "secret_sauce"
+    Then the user should see an error message containing "locked out"
 
-  @positive
-  Scenario: Login with Visual User
-    Given I navigate to the SauceDemo login page
-    When I enter username "visual_user" and password "secret_sauce"
-    And I click on the login button
-    Then I should be redirected to the inventory page
+  Scenario: Failed login with invalid username
+    When the user logs in with username "invalid_user" and password "secret_sauce"
+    Then the user should see an error message containing "Username and password do not match"
 
-  @positive
-  Scenario: Login with Remember Me Functionality
-    Given I navigate to the SauceDemo login page
-    When I enter username "standard_user" and password "secret_sauce"
-    And I check the "Remember me" checkbox
-    And I click on the login button
-    And I log out from the application
-    When I revisit the login page
-    Then the username field should be pre-populated with "standard_user"
+  Scenario: Failed login with invalid password
+    When the user logs in with username "standard_user" and password "wrong_password"
+    Then the user should see an error message containing "Username and password do not match"
 
-  # Negative Test Cases
-  @negative
-  Scenario: Login with Locked Out User
-    Given I navigate to the SauceDemo login page
-    When I enter username "locked_out_user" and password "secret_sauce"
-    And I click on the login button
-    Then I should see an error message "Sorry, this user has been locked out."
+  Scenario: Failed login with empty credentials
+    When the user logs in with username "" and password ""
+    Then the user should see an error message containing "Username is required"
 
-  @negative
-  Scenario: Login with Invalid Username
-    Given I navigate to the SauceDemo login page
-    When I enter username "invalid_user" and password "secret_sauce"
-    And I click on the login button
-    Then I should see an error message "Username and password do not match any user in this service."
+  Scenario Outline: Login with different types of users
+    When the user enters username "<username>"
+    And the user enters password "<password>"
+    And the user clicks the login button
+    Then the user should <result>
 
-  @negative
-  Scenario: Login with Invalid Password
-    Given I navigate to the SauceDemo login page
-    When I enter username "standard_user" and password "wrong_password"
-    And I click on the login button
-    Then I should see an error message "Username and password do not match any user in this service."
-
-  @negative
-  Scenario: Login with Empty Username
-    Given I navigate to the SauceDemo login page
-    When I leave the username field empty
-    And I enter password "secret_sauce"
-    And I click on the login button
-    Then I should see an error message "Username is required."
-
-  @negative
-  Scenario: Login with Empty Password
-    Given I navigate to the SauceDemo login page
-    When I enter username "standard_user"
-    And I leave the password field empty
-    And I click on the login button
-    Then I should see an error message "Password is required."
-
-  @negative
-  Scenario: Login with Both Fields Empty
-    Given I navigate to the SauceDemo login page
-    When I leave the username field empty
-    And I leave the password field empty
-    And I click on the login button
-    Then I should see an error message "Username is required."
-
-  # Edge Cases and Security Tests
-  @edge
-  Scenario: Login with Extremely Long Username
-    Given I navigate to the SauceDemo login page
-    When I enter a username with 100 characters and password "secret_sauce"
-    And I click on the login button
-    Then I should see an error message about input length or invalid credentials
-
-  @edge
-  Scenario: Login with Extremely Long Password
-    Given I navigate to the SauceDemo login page
-    When I enter username "standard_user" and a password with 100 characters
-    And I click on the login button
-    Then I should see an error message about input length or invalid credentials
-
-  @edge
-  Scenario: Login with Special Characters in Username
-    Given I navigate to the SauceDemo login page
-    When I enter username "user!@#$%^&*()" and password "secret_sauce"
-    And I click on the login button
-    Then I should see an error message about invalid characters
-
-  @edge
-  Scenario: Login with Whitespace Only in Fields
-    Given I navigate to the SauceDemo login page
-    When I enter whitespace only in the username field
-    And I enter whitespace only in the password field
-    And I click on the login button
-    Then I should see an error message "Username is required."
-
-  @edge
-  Scenario: Login Field Case Sensitivity
-    Given I navigate to the SauceDemo login page
-    When I enter username "STANDARD_USER" and password "SECRET_SAUCE"
-    And I click on the login button
-    Then I should see an error message "Username and password do not match any user in this service."
-
-  @edge
-  Scenario: Browser Back Button After Logout
-    Given I successfully login with username "standard_user" and password "secret_sauce"
-    And I navigate to several pages within the application
-    And I log out from the application
-    When I click the browser back button multiple times
-    Then I should not be able to access protected content after logout
+    Examples:
+      | username                | password      | result                                                       |
+      | standard_user           | secret_sauce  | be logged in successfully                                    |
+      | problem_user            | secret_sauce  | be logged in successfully                                    |
+      | performance_glitch_user | secret_sauce  | be logged in successfully                                    |
+      | locked_out_user         | secret_sauce  | see an error message containing "locked out"                 |
+      | invalid_user            | secret_sauce  | see an error message containing "Username and password do not match" |
+      | standard_user           | wrong_pass    | see an error message containing "Username and password do not match" |

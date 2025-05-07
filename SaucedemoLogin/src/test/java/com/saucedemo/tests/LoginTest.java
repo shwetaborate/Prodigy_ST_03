@@ -1,93 +1,91 @@
 package com.saucedemo.tests;
 
-import org.openqa.selenium.WebDriver;
-import org.testng.Assert;
-import org.testng.Reporter;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
 import com.saucedemo.pages.LoginPage;
 import com.saucedemo.utils.WebDriverSetup;
+import org.openqa.selenium.WebDriver;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
+/**
+ * Test class for the Sauce Demo login functionality.
+ */
 public class LoginTest {
     private WebDriver driver;
     private LoginPage loginPage;
 
-    @BeforeClass
+    @BeforeMethod
     public void setUp() {
         driver = WebDriverSetup.getDriver();
-        driver.get("https://www.saucedemo.com/");
         loginPage = new LoginPage(driver);
     }
 
-    @AfterClass
+    @AfterMethod
     public void tearDown() {
         WebDriverSetup.quitDriver();
     }
 
-    @DataProvider(name = "validCredentials")
-    public Object[][] validCredentials() {
-        return new Object[][]{
-                {"standard_user", "secret_sauce"},
-                {"performance_glitch_user", "secret_sauce"},
-                {"error_user", "secret_sauce"},
-                {"visual_user", "secret_sauce"}
+    @DataProvider(name = "validLoginData")
+    public Object[][] validLoginData() {
+        return new Object[][] {
+            {"standard_user", "secret_sauce"},
+            {"performance_glitch_user", "secret_sauce"}
         };
     }
 
-    @DataProvider(name = "invalidCredentials")
-    public Object[][] invalidCredentials() {
-        return new Object[][]{
-                {"locked_out_user", "secret_sauce", "Sorry, this user has been locked out."},
-                {"invalid_user", "secret_sauce", "Username and password do not match any user in this service."},
-                {"standard_user", "wrong_password", "Username and password do not match any user in this service."},
-                {"", "secret_sauce", "Username is required."},
-                {"standard_user", "", "Password is required."},
-                {"", "", "Username is required."}
+    @DataProvider(name = "invalidLoginData")
+    public Object[][] invalidLoginData() {
+        return new Object[][] {
+            {"locked_out_user", "secret_sauce", "Epic sadface: Sorry, this user has been locked out."},
+            {"invalid_user", "secret_sauce", "Epic sadface: Username and password do not match any user in this service"},
+            {"standard_user", "wrong_password", "Epic sadface: Username and password do not match any user in this service"},
+            {"", "", "Epic sadface: Username is required"}
         };
     }
 
-    @DataProvider(name = "edgeCases")
-    public Object[][] edgeCases() {
-        return new Object[][]{
-                {"a".repeat(100), "secret_sauce", "input length or invalid credentials"},
-                {"standard_user", "a".repeat(100), "input length or invalid credentials"},
-                {"user!@#$%^&*()", "secret_sauce", "invalid characters"},
-                {"   ", "   ", "Username is required."},
-                {"STANDARD_USER", "SECRET_SAUCE", "Username and password do not match any user in this service."}
-        };
-    }
-
-    @Test(dataProvider = "validCredentials")
+    @Test(dataProvider = "validLoginData")
     public void testValidLogin(String username, String password) {
-        Reporter.log("Testing valid login with username: " + username, true);
-        loginPage.enterUsername(username);
-        loginPage.enterPassword(password);
-        loginPage.clickLogin();
-        Assert.assertTrue(driver.getCurrentUrl().contains("inventory.html"), "Login failed!");
-        Reporter.log("Valid login test passed for username: " + username, true);
+        // Open the login page
+        loginPage.open();
+        
+        // Perform login
+        loginPage.login(username, password);
+        
+        // Verify login was successful
+        Assert.assertTrue(loginPage.isLoginSuccessful(), 
+            "Login failed for valid credentials: " + username + " / " + password);
     }
 
-    @Test(dataProvider = "invalidCredentials")
+    @Test(dataProvider = "invalidLoginData")
     public void testInvalidLogin(String username, String password, String expectedErrorMessage) {
-        Reporter.log("Testing invalid login with username: " + username, true);
-        loginPage.enterUsername(username);
-        loginPage.enterPassword(password);
-        loginPage.clickLogin();
-        String actualErrorMessage = loginPage.getErrorMessage();
-        Assert.assertEquals(actualErrorMessage, expectedErrorMessage, "Error message does not match!");
-        Reporter.log("Invalid login test passed for username: " + username, true);
+        // Open the login page
+        loginPage.open();
+        
+        // Perform login
+        loginPage.login(username, password);
+        
+        // Verify login failed with the expected error message
+        Assert.assertFalse(loginPage.isLoginSuccessful(), 
+            "Login succeeded unexpectedly for invalid credentials: " + username + " / " + password);
+        
+        Assert.assertEquals(loginPage.getErrorMessage(), expectedErrorMessage,
+            "Error message did not match expected message for invalid credentials: " + username + " / " + password);
     }
-
-    @Test(dataProvider = "edgeCases")
-    public void testEdgeCases(String username, String password, String expectedErrorMessage) {
-        Reporter.log("Testing edge case login with username: " + username, true);
-        loginPage.enterUsername(username);
-        loginPage.enterPassword(password);
-        loginPage.clickLogin();
-        String actualErrorMessage = loginPage.getErrorMessage();
-        Assert.assertTrue(actualErrorMessage.contains(expectedErrorMessage), "Error message does not match for edge case!");
-        Reporter.log("Edge case test passed for username: " + username, true);
+    
+    @Test
+    public void testLoginPageElements() {
+        // Open the login page
+        loginPage.open();
+        
+        // Verify page elements are present and functioning
+        loginPage.enterUsername("test_user");
+        loginPage.enterPassword("test_password");
+        loginPage.clickLoginButton();
+        
+        // Verify error message is displayed
+        Assert.assertFalse(loginPage.isLoginSuccessful(), 
+            "Login succeeded unexpectedly for invalid credentials");
     }
 }

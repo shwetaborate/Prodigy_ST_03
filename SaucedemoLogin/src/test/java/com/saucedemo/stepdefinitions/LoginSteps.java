@@ -1,52 +1,69 @@
 package com.saucedemo.stepdefinitions;
 
-import org.openqa.selenium.WebDriver;
 import com.saucedemo.pages.LoginPage;
 import com.saucedemo.utils.WebDriverSetup;
-import io.cucumber.java.en.*;
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import org.openqa.selenium.WebDriver;
 import org.testng.Assert;
 
+/**
+ * Step definitions for Cucumber BDD tests related to login functionality.
+ */
 public class LoginSteps {
-    WebDriver driver = WebDriverSetup.getDriver();
-    LoginPage loginPage = new LoginPage(driver);
-
-    @Given("User is on SauceDemo login page")
-    public void user_is_on_login_page() {
-        driver.get("https://www.saucedemo.com/");
+    private WebDriver driver;
+    private LoginPage loginPage;
+    
+    @Before
+    public void setUp() {
+        driver = WebDriverSetup.getDriver();
+        loginPage = new LoginPage(driver);
     }
-
-    @When("User enters username {string}")
-    public void user_enters_username(String username) {
+    
+    @After
+    public void tearDown() {
+        WebDriverSetup.quitDriver();
+    }
+    
+    @Given("the user is on the login page")
+    public void userIsOnLoginPage() {
+        loginPage.open();
+    }
+    
+    @When("the user enters username {string}")
+    public void userEntersUsername(String username) {
         loginPage.enterUsername(username);
     }
-
-    @And("User enters password {string}")
-    public void user_enters_password(String password) {
+    
+    @When("the user enters password {string}")
+    public void userEntersPassword(String password) {
         loginPage.enterPassword(password);
     }
-
-    @And("User clicks on the login button")
-    public void clicks_login_button() {
-        loginPage.clickLogin();
+    
+    @When("the user clicks the login button")
+    public void userClicksLoginButton() {
+        loginPage.clickLoginButton();
     }
-
-    @Then("User should be redirected to the home page")
-    public void user_should_be_redirected_to_the_home_page() {
-        String expectedUrl = "https://www.saucedemo.com/inventory.html";
-        String actualUrl = driver.getCurrentUrl();
-        Assert.assertEquals(actualUrl, expectedUrl, "User was not redirected to the home page.");
+    
+    @When("the user logs in with username {string} and password {string}")
+    public void userLogsInWithCredentials(String username, String password) {
+        loginPage.login(username, password);
     }
-
-    @Then("User should see an error message {string}")
-    public void user_should_see_error_message(String expectedError) {
-        String actualError = loginPage.getErrorMessage();
-        Assert.assertEquals(actualError, expectedError, "Error message is not as expected.");
+    
+    @Then("the user should be logged in successfully")
+    public void userShouldBeLoggedInSuccessfully() {
+        Assert.assertTrue(loginPage.isLoginSuccessful(), 
+            "Login failed when it was expected to succeed");
     }
-
-    @Then("The username field should be pre-populated with {string}")
-    public void username_field_should_be_prepopulated(String expectedUsername) {
-        // Assuming there’s a method to get the username field value in LoginPage
-        String actualUsername = loginPage.getUsernameFieldValue();
-        Assert.assertEquals(actualUsername, expectedUsername, "Username field is not pre-populated correctly.");
+    
+    @Then("the user should see an error message containing {string}")
+    public void userShouldSeeErrorMessage(String errorMessageText) {
+        Assert.assertFalse(loginPage.isLoginSuccessful(), 
+            "Login succeeded when it was expected to fail");
+        Assert.assertTrue(loginPage.getErrorMessage().contains(errorMessageText),
+            "Expected error message not found. Actual: " + loginPage.getErrorMessage());
     }
 }

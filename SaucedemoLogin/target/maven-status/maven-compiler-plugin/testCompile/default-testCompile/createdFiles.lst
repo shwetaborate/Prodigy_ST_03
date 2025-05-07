@@ -1,0 +1,6 @@
+com\saucedemo\stepdefinitions\package-info.class
+com\saucedemo\runner\package-info.class
+com\saucedemo\stepdefinitions\LoginSteps.class
+com\saucedemo\runner\CucumberTestRunner.class
+com\saucedemo\tests\LoginTest.class
+com\saucedemo\tests\package-info.class
